@@ -1,4 +1,3 @@
-import * as pc from "playcanvas";
 import bootstrapCSSUrl from "bootstrap/dist/css/bootstrap.min.css?url";
 import bootstrapJSUrl from "bootstrap/dist/js/bootstrap.min.js?url";
 
@@ -6,16 +5,17 @@ import { STATS, ATTRIBUTES, METHODS } from "./constants";
 import { getValueByType } from "./utils";
 
 class UI {
-  collectedMeshInstances: pc.MeshInstance[] = [];
-  app: pc.Application;
+  pc: any;
+  collectedMeshInstances: any[] = [];
+  app: any;
 
-  constructor(app: pc.Application) {
+  constructor(pc: any, app: any) {
+    this.pc = pc;
     this.app = app;
   }
 
-  init(app: pc.Application) {
-    this.app = app;
-    const stats = app.stats as any;
+  init() {
+    const stats = this.app.stats as any;
     this.injectBootstrap();
 
     const container = this.createContainer();
@@ -233,7 +233,7 @@ class UI {
 
     for (const meshInstance of this.collectedMeshInstances) {
       if (!(meshInstance as any).isVisualized) {
-        const material = new pc.StandardMaterial();
+        const material = new this.pc.StandardMaterial();
         const r = Math.random();
         const g = Math.random();
         const b = Math.random();
@@ -246,11 +246,11 @@ class UI {
     }
   }
 
-  traverseMeshes(entity: pc.Entity) {
+  traverseMeshes(entity: any) {
     if (entity && entity.enabled) {
       if (entity.children && entity.children.length > 0) {
         for (const child of entity.children) {
-          this.traverseMeshes(child as pc.Entity);
+          this.traverseMeshes(child);
         }
       }
       if (entity.render && entity.render.enabled) {

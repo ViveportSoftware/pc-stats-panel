@@ -1,19 +1,18 @@
-import { defineConfig } from 'vite'
-import dts from 'vite-plugin-dts';
-import mkcert from 'vite-plugin-mkcert';
+import { defineConfig } from "vite";
+import dts from "vite-plugin-dts";
+import mkcert from "vite-plugin-mkcert";
 
 export default defineConfig({
   server: {
-    host: '0.0.0.0',
+    host: "0.0.0.0",
     port: 45173,
-    https: true,
   },
   build: {
     lib: {
-      entry: './lib/index.ts',
-      name: 'index',
-      fileName: 'index'
-    }
+      entry: "./lib/index.ts",
+      name: "pc-stats-panel",
+      fileName: "index",
+    },
   },
   plugins: [
     mkcert(),
@@ -21,4 +20,4 @@ export default defineConfig({
       insertTypesEntry: true,
     }),
   ],
-})
+});
