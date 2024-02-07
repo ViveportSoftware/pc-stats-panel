@@ -1,27 +1,26 @@
-import bootstrapCSSUrl from "bootstrap/dist/css/bootstrap.min.css?url";
-import bootstrapJSUrl from "bootstrap/dist/js/bootstrap.min.js?url";
-
 import { STATS, ATTRIBUTES, METHODS } from "./constants";
-import { getValueByType } from "./utils";
+import { getValueByType } from "../base/utils";
+import { Base } from "../base";
 
-class UI {
+class PlayCanvas extends Base {
   pc: any;
-  collectedMeshInstances: any[] = [];
   app: any;
+  collectedMeshInstances: any[] = [];
+  intervalVisualizeMesh: any;
 
   constructor(pc: any, app: any) {
+    super();
     this.pc = pc;
     this.app = app;
   }
 
   init() {
     const stats = this.app.stats as any;
-    this.injectBootstrap();
 
-    const container = this.createContainer();
+    const container = this.createContainer("pc-stats", "PlayCanvas");
     document.body.appendChild(container);
 
-    const itemList = container.querySelector("#item-list");
+    const itemList = container.querySelector("#pc-stats-item-list");
 
     for (const [stat, title] of Object.entries(STATS)) {
       const itemTitle = this.createItemTitle(title);
@@ -36,7 +35,7 @@ class UI {
             const item = this.createItem(
               attributeKey,
               attribute.title,
-              getValueByType(value as any, attribute.valueType)
+              getValueByType(value as any, attribute.type)
             );
             itemList?.appendChild(item);
           }
@@ -53,7 +52,7 @@ class UI {
             const item = this.createItem(
               methodKey,
               (settings as any).title,
-              getValueByType(stats[stat][method], (settings as any).valueType)
+              getValueByType(stats[stat][method], (settings as any).type)
             );
 
             itemList?.appendChild(item);
@@ -75,8 +74,9 @@ class UI {
     this.bindEvents();
   }
 
-  update(stats: any) {
-    if (stats) {
+  update() {
+    if (this.app) {
+      const stats = this.app.stats as any;
       // stats
       for (const [stat] of Object.entries(STATS)) {
         // attributes
@@ -86,10 +86,7 @@ class UI {
           if (attribute) {
             const item = document.getElementById(attributeKey);
             if (item) {
-              const newValue = getValueByType(
-                value as any,
-                attribute.valueType
-              );
+              const newValue = getValueByType(value as any, attribute.type);
               item.innerHTML = newValue;
             }
           }
@@ -104,10 +101,7 @@ class UI {
               const item = document.getElementById(methodKey);
               if (item) {
                 const value = stats[stat][method];
-                const newValue = getValueByType(
-                  value,
-                  (settings as any).valueType
-                );
+                const newValue = getValueByType(value, (settings as any).type);
                 item.innerHTML = newValue;
               }
             }
@@ -116,90 +110,6 @@ class UI {
       }
     }
   }
-
-  injectBootstrap() {
-    const bootstrapCSS = document.createElement("link");
-    bootstrapCSS.href = bootstrapCSSUrl;
-    bootstrapCSS.rel = "stylesheet";
-    document.body.appendChild(bootstrapCSS);
-
-    const bootstrapJS = document.createElement("script");
-    bootstrapJS.src = bootstrapJSUrl;
-    document.body.appendChild(bootstrapJS);
-
-    const customCSS = document.createElement("style");
-    customCSS.innerHTML = `
-      .list-group {
-          --bs-list-group-item-padding-x: 0.5rem;
-          --bs-list-group-item-padding-y: 0.2rem;
-      }
-      `;
-    document.body.appendChild(customCSS);
-  }
-
-  createContainer(): HTMLElement {
-    const container = document.createElement("div");
-    container.style.padding = ".4rem";
-    container.style.width = "auto";
-    container.style.position = "absolute";
-    container.style.zIndex = "1000";
-    container.style.backgroundColor = "rgba(0,0,0,.4)";
-    container.style.left = "0";
-    container.style.top = "0";
-    container.style.maxHeight = "64rem";
-    container.style.overflow = "auto";
-
-    const innerHTML = `
-    <div class="accordion accordion-flush opacity-75" id="pc-stats">
-        <div class="accordion-item">
-            <div class="accordion-header" style="min-width:16rem">
-                <button class="accordion-button" style="padding:.5rem" type="button" data-bs-toggle="collapse" data-bs-target="#item-list-container" aria-expanded="true" aria-controls="item-list-container">
-                    PlayCanvas Stats
-                </button>
-            </div>
-            <div id="item-list-container" class="accordion-collapse collapse show" data-bs-parent="#pc-stats">
-                <div class="accordion-body">
-                    <ol class="list-group" id="item-list">
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-    `;
-
-    container.innerHTML = innerHTML;
-
-    return container;
-  }
-
-  createItemTitle = (title: string): HTMLElement => {
-    const item = document.createElement("li");
-    item.className =
-      "list-group-item list-group-item-info d-flex justify-content-between align-items-center";
-    item.innerHTML = title;
-    return item;
-  };
-
-  createItem = (id: string, title: string, value: string) => {
-    const item = document.createElement("li");
-    item.className =
-      "list-group-item d-flex justify-content-between align-items-center";
-    item.innerHTML = `
-      <small>${title}</small>
-      <span class="badge bg-primary rounded-pill" id="${id}">${value}</span>
-      `;
-    return item;
-  };
-
-  createCheckBoxItem = (id: string, title: string): HTMLElement => {
-    const item = document.createElement("li");
-    item.className = "list-group-item";
-    item.innerHTML = `
-        <input class="form-check-input me-1" type="checkbox" value="" id="${id}">
-        <label class="form-check-label" for="option-visualize-mesh">${title}</label>
-      `;
-    return item;
-  };
 
   bindEvents() {
     this.bindVisualizeMesh();
@@ -210,14 +120,14 @@ class UI {
     if (element) {
       element.addEventListener("change", (e: any) => {
         const isVisualizeMesh = e.target.checked;
-        let interval;
-        if (isVisualizeMesh && !interval) {
-          interval = setInterval(() => {
+
+        if (isVisualizeMesh && !this.intervalVisualizeMesh) {
+          this.intervalVisualizeMesh = setInterval(() => {
             this.visualizeMesh();
           }, 200);
         } else {
-          if (interval) {
-            clearInterval(interval);
+          if (this.intervalVisualizeMesh) {
+            clearInterval(this.intervalVisualizeMesh);
           }
         }
       });
@@ -225,6 +135,7 @@ class UI {
   }
 
   visualizeMesh() {
+    console.error("visualizeMesh");
     if (this.collectedMeshInstances.length) {
       this.collectedMeshInstances.splice(0, this.collectedMeshInstances.length);
     }
@@ -262,4 +173,4 @@ class UI {
   }
 }
 
-export { UI };
+export { PlayCanvas };

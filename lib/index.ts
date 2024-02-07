@@ -1,4 +1,4 @@
-import { UI } from "./ui";
+import { UI } from "./ui/";
 
 const init = (pc: any) => {
   if (!pc) {
@@ -21,7 +21,7 @@ const init = (pc: any) => {
   ui.init();
 
   app.on("update", () => {
-    ui.update(app.stats);
+    ui.update();
   });
 };
 

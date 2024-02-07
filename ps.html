@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Model Preview</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+    />
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        touch-action: pan-y;
+      }
+      #modelDetails {
+        position: absolute;
+        left: 100px;
+        bottom: 20px;
+        color: #eeeeee7a;
+        width: 300px;
+        height: 5px;
+        font-family: Helvetica, sans-serif;
+        font-size: 14px;
+        z-index: 10000;
+        margin: 5px;
+        padding: 5px;
+      }
+      #streamedBy {
+        position: absolute;
+        bottom: 20px;
+        right: 15px;
+        width: 6%;
+        z-index: 1;
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/playcanvas/1.68.0/playcanvas.prf.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/playcanvas/1.68.0/playcanvas-extras.js"></script>
+  </head>
+
+  <body>
+    <div id="modelDetails">11M Polygons</div>
+    <img
+      id="streamedBy"
+      src="https://stream-stage.viverse.com/assets/streamablemodel/shared-assets/ViverseLogoColour.png"
+    />
+
+    <canvas id="application"></canvas>
+    <script>
+      const canvas = document.getElementById("application");
+      var app = new pc.Application(canvas, {
+        mouse: new pc.Mouse(canvas),
+        keyboard: new pc.Keyboard(window),
+        touch: new pc.TouchDevice(window),
+      });
+
+      app.graphicsDevice.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+
+      // fill the available space at full resolution
+      app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+      app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+      pc.basisInitialize({
+        fallbackUrl:
+          "https://stream-stage.viverse.com/assets/streamablemodel/2.1.11/lib/basis.js",
+      });
+
+      // ensure canvas is resized when window changes size
+      window.addEventListener("resize", () => app.resizeCanvas());
+    </script>
+
+    <script src="https://stream-stage.viverse.com/assets/streamablemodel/2.1.11/PolygonStreaming.js?1707103213142"></script>
+    <script src="https://stream-stage.viverse.com/assets/streamablemodel/2.1.11/lib/orbitCameraPlaycanvas.js"></script>
+    <script src="https://stream-stage.viverse.com/assets/streamablemodel/2.1.11/lib/fpsmeter.min.js"></script>
+
+    <script>
+      console.log("Template build: 1707103213142");
+
+      // const Fps = pc.createScript('fps');
+
+      // Fps.prototype.initialize = function () {
+      //     this.fps = new FPSMeter({heat: true, graph: true});
+      // };
+
+      // Fps.prototype.update = function (dt) {
+      //     this.fps.tick();
+      // };
+
+      // app.root.addComponent("script");
+      // app.root.script.create("fps");
+
+      // create camera entity
+      const camera = new pc.Entity("camera");
+      camera.addComponent("camera", {
+        clearColor: new pc.Color(0.4, 0.4, 0.4),
+        farClip: 1000,
+        nearClip: 0.1,
+      });
+      camera.addComponent("script");
+      var orbitCamera = camera.script.create("orbitCamera");
+      orbitCamera.postInitialize = function () {
+        this.targetPosition = new pc.Vec3(0, 0.98289235, 0);
+        this.resetAndLookAtPoint(
+          new pc.Vec3(3.4543392, 1.87643085, 2.7033227),
+          this.targetPosition
+        );
+      };
+      camera.script.create("mouseInput");
+      camera.script.create("touchInput");
+      app.root.addChild(camera);
+
+      app.scene.ambientLight = new pc.Color(0.81, 0.89, 0.94);
+      app.scene.ambientLight.intensity = 1;
+      app.scene.toneMapping = pc.TONEMAP_ACES;
+
+      let streamController = new pc.Entity();
+      streamController.addComponent("script");
+      streamController.script.create("streamController", {
+        attributes: {
+          camera: camera,
+          cameraType: "nonPlayer",
+          occlusionCulling: true,
+          occlusionGeometry: "boundingBox",
+          occlusionQueryFrequency: 8,
+          triangleBudget: 3000000,
+          mobileTriangleBudget: 1000000,
+          minimumDistance: 0.01,
+          distanceFactor: 1.1,
+          distanceType: "boundingBoxCenter",
+          maximumQuality: 15000,
+          closeUpDistance: 3,
+          closeUpDistanceFactor: 5,
+        },
+      });
+
+      let element1 = new pc.Entity();
+      element1.addComponent("script");
+      element1.script.create("streamableModel", {
+        attributes: {
+          path: "model.xrg",
+          qualityPriority: 1,
+          useAlpha: true,
+          useMetalRoughness: true,
+          castShadows: true,
+          castLightmapShadows: true,
+          receiveShadows: true,
+          doubleSidedMaterials: true,
+          initialTrianglePercent: 0.1,
+        },
+      });
+      element1.setPosition(
+        0.13272400000000006,
+        0.07146585,
+        0.06034649999999986
+      );
+      element1.setLocalScale(1, 1, 1);
+      streamController.addChild(element1);
+      app.root.addChild(streamController);
+
+      // create directional light
+      var directionalLight = new pc.Entity();
+      directionalLight.addComponent("light", {
+        type: "directional",
+        color: new pc.Color(1, 1, 1),
+        intensity: 1,
+        castShadows: true,
+        normalOffsetBias: 0.05,
+        shadowResolution: 2048,
+      });
+      directionalLight.setLocalEulerAngles(45, 45, 0);
+      directionalLight.setLocalPosition(camera.getPosition());
+      app.root.addChild(directionalLight);
+
+      // ground plane
+      const plane = new pc.Entity();
+      plane.addComponent("model", {
+        type: "plane",
+      });
+      plane.setLocalScale(6.64296, 1, 6.64296);
+      const material = new pc.StandardMaterial();
+      material.opacity = 0.2;
+      material.blendType = pc.BLEND_NORMAL;
+      material.setParameter("lineBrightness", 0.1);
+      material.chunks.APIVersion = pc.CHUNKAPI_1_62;
+      material.chunks.startVS = `
+            varying vec3 vPosition;
+
+            void main(void) {
+                vPosition = vertex_position;
+                gl_Position = getPosition();
+        `;
+      material.chunks.diffusePS = `
+            uniform vec3 lineColor;
+            varying vec3 vPosition;
+            uniform float lineBrightness;
+
+            float line(float lineWidth, float numCells) {
+                vec2 coord = vPosition.xz / vec2(1.0 / numCells);
+                vec2 grid = abs(fract(coord - 0.5) - 0.5) / fwidth(coord * lineWidth);
+                float line = min(grid.x, grid.y);
+                return 1.0 - min(line, 1.0);
+            }
+            
+            void getAlbedo() {
+                float color = line(1.0, 10.0) + line(0.5, 50.0);
+                dAlbedo = vec3(color * lineBrightness);
+            }
+        `;
+      material.update();
+      plane.model.material = material;
+      app.root.addChild(plane);
+
+      // skybox cubemap
+      var prefix = "env-sky-cube_";
+      var suffixes = ["posx", "negx", "posy", "negy", "posz", "negz"];
+      var fileExtension = ".jpg";
+      var textureAssetIds = [];
+      for (var i = 0; i < 6; i++) {
+        var textureAsset = new pc.Asset(`skybox-texture-${i}`, "texture", {
+          url: `https://stream-stage.viverse.com/assets/streamablemodel/shared-assets/${prefix}${suffixes[i]}${fileExtension}`,
+          type: pc.TEXTURETYPE_RGBM,
+        });
+        textureAssetIds.push(textureAsset.id);
+        app.assets.add(textureAsset);
+        app.assets.load(textureAsset);
+      }
+      var cubemapAsset = new pc.Asset(
+        "skybox-cubemap",
+        "cubemap",
+        {
+          url: "https://stream-stage.viverse.com/assets/streamablemodel/shared-assets/env-sky-cube_prefiltered.png",
+        },
+        {
+          textures: textureAssetIds,
+          magFilter: 1,
+          minFilter: 5,
+          anisotropy: 1,
+        }
+      );
+      cubemapAsset.loadFaces = true;
+      cubemapAsset.once("load", function (asset) {
+        app.scene.setSkybox(cubemapAsset.resources);
+      });
+      app.assets.add(cubemapAsset);
+      app.assets.load(cubemapAsset);
+
+      const miniStats = new pcx.MiniStats(app);
+
+      app.start();
+
+      const script = document.createElement("script");
+      script.src = "./dist/index.umd.cjs?t=" + Date.now();
+      script.onload = () => {
+        window["pc-stats-panel"]["init"](pc);
+      };
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>
