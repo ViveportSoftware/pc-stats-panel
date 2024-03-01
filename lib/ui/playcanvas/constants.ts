@@ -13,6 +13,7 @@ export const ATTRIBUTES = {
   "frame.triangles": { title: "triangles", type: VALUE_TYPE.INTL },
   "frame.shaders": { title: "shaders", type: VALUE_TYPE.INTEGER },
   "frame.materials": { title: "materials", type: VALUE_TYPE.INTEGER },
+  "drawCalls.shadow": { title: "shadow", type: VALUE_TYPE.INTEGER },
   "drawCalls.total": { title: "total", type: VALUE_TYPE.INTEGER },
   "vram.tex": { title: "texture total", type: VALUE_TYPE.MEGABYTES },
   "vram.texAsset": { title: "texture asset", type: VALUE_TYPE.MEGABYTES },
