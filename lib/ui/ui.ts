@@ -25,11 +25,12 @@ class UI {
     this.pss.init();
 
     document.addEventListener("keypress", async (e) => {
-      if (e.altKey && e.code === "KeyZ") {
+      console.error(e);
+      if (e.key == "/") {
         this.pcs.show();
       }
 
-      if (e.altKey && e.code === "KeyX") {
+      if (e.key == "\\") {
         this.pss.show();
       }
     });

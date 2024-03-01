@@ -23,6 +23,7 @@ class PlayCanvas extends Base {
     const itemList = container.querySelector("#pc-stats-item-list");
 
     for (const [stat, title] of Object.entries(STATS)) {
+      console.log(stat, title);
       const itemTitle = this.createItemTitle(title);
       itemList?.appendChild(itemTitle);
 
