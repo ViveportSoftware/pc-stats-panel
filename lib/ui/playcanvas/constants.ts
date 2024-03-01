@@ -14,7 +14,7 @@ export const ATTRIBUTES = {
   "frame.shaders": { title: "shaders", type: VALUE_TYPE.INTEGER },
   "frame.materials": { title: "materials", type: VALUE_TYPE.INTEGER },
   "drawCalls.total": { title: "total", type: VALUE_TYPE.INTEGER },
-  "vram.tex": { title: "texture", type: VALUE_TYPE.MEGABYTES },
+  "vram.tex": { title: "texture total", type: VALUE_TYPE.MEGABYTES },
   "vram.texAsset": { title: "texture asset", type: VALUE_TYPE.MEGABYTES },
   "vram.texLightmap": { title: "texture lightmap", type: VALUE_TYPE.MEGABYTES },
   "vram.texShadow": { title: "texture shadow", type: VALUE_TYPE.MEGABYTES },
